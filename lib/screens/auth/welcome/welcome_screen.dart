@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:lttbdd_nhom8/core/constants/app_colors.dart';
 import '../login/login_screen.dart';
+import '../register/register_screen.dart';
 //import
 
 class WelcomeScreen extends StatelessWidget {
@@ -176,10 +177,10 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     // Xử lý khi người dùng nhấn Đăng ký.
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Bạn đã chọn Đăng ký'),
-                        // Hiển thị thông báo khi nhấn nút.
+                    Navigator.push(
+                     context,
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
                       ),
                     );
                   },

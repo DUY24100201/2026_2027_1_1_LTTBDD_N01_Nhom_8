@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lttbdd_nhom8/core/constants/app_colors.dart';
+import 'package:lttbdd_nhom8/screens/auth/register/register_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -197,10 +199,15 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 25),
               Center(
                 child: TextButton(
-                  onPressed: () {
-                    // Chuyển màn hình đăng ký sau
-                  },
-                  child: const Text.rich(
+                 onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                    child: const Text.rich(
                     TextSpan(
                       text: 'Chưa có tài khoản? ',
                       style: TextStyle(color: AppColors.grey),

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:lttbdd_nhom8/core/constants/app_colors.dart';
 import '../login/login_screen.dart';
-
+//import
 
 class WelcomeScreen extends StatelessWidget {
   // Tạo màn hình chào mừng WelcomeScreen.

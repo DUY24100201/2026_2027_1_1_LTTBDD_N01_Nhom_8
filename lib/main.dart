@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-
-import 'screens/home/home_screen.dart';
+import 'screens/auth/welcome/welcome_screen.dart';
 
 void main() {
   runApp(const MelodyApp());
 }
 
+// Widget chính của ứng dụng
 class MelodyApp extends StatelessWidget {
   const MelodyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false, // Ẩn chữ DEBUG
+      title: 'Melody',
+      theme: ThemeData.dark(), // Giao diện tối
+      home: const WelcomeScreen(), // Mở màn hình Welcome
     );
   }
 }

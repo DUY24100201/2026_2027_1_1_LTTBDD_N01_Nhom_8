@@ -59,17 +59,25 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 25),
               Center(
                 child: Column(
-                  children: const [
-                    Icon(
-                      Icons.headphones,
-                      size: 75,
-                      color: AppColors.primary,
+                  children: [
+                    // LOGO ỨNG DỤNG
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(25), // Bo tròn 25px
+                      child: Image.asset(
+                        'assets/imgs/logo.png',
+                        width: 110,
+                        height: 110,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
+
+                    const SizedBox(height: 8),
+
+                    // TÊN ỨNG DỤNG
+                    const Text(
                       'Melody',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),

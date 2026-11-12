@@ -1,49 +1,8 @@
 
 import 'package:flutter/material.dart';
+import 'package:lttbdd_nhom8/core/constants/app_colors.dart';
+import '../login/login_screen.dart';
 
-void main() {
-  // Hàm main là điểm bắt đầu chạy chương trình Flutter.
-  runApp(const MelodyApp()); // runApp() khởi chạy ứng dụng và hiển thị widget MelodyApp.
-}
-
-class MelodyApp extends StatelessWidget { // Tạo class MelodyApp kế thừa StatelessWidget.
-  
-
-  const MelodyApp({super.key});// Constructor của MelodyApp.
- 
-
-  @override
-  Widget build(BuildContext context) {
-    
-    return MaterialApp(
-      // MaterialApp là widget gốc của ứng dụng.
-
-      debugShowCheckedModeBanner: false,
-   
-      title: 'Melody',
-     
-
-      theme: ThemeData(
-        // ThemeData dùng để thiết lập giao diện chung.
-
-        brightness: Brightness.dark,
-        // Chọn chế độ giao diện tối.
-
-        scaffoldBackgroundColor: const Color(0xFF15121F),
-        // Đặt màu nền chính là màu tím đen.
-
-        primaryColor: const Color(0xFF7952C7),
-        // Đặt màu chủ đạo là màu tím.
-
-        fontFamily: 'Roboto',
-        // Chọn font chữ Roboto.
-      ),
-
-      home: const WelcomeScreen(),
-      // Màn hình đầu tiên khi mở ứng dụng là WelcomeScreen.
-    );
-  }
-}
 
 class WelcomeScreen extends StatelessWidget {
   // Tạo màn hình chào mừng WelcomeScreen.
@@ -55,7 +14,8 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Hàm xây dựng giao diện màn hình chào mừng.
 
-    return Scaffold( // Scaffold tạo khung màn hình cơ bản.
+    return Scaffold(
+      backgroundColor: AppColors.background, // Scaffold tạo khung màn hình cơ bản.
     
 
       body: SafeArea( // SafeArea tránh nội dung bị che bởi tai thỏ,
@@ -98,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                         style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
 
@@ -119,7 +79,7 @@ class WelcomeScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   // In đậm.
 
-                  color: Colors.white,
+                  color: AppColors.white,
                   // Chữ màu trắng.
                 ),
               ),
@@ -139,7 +99,7 @@ class WelcomeScreen extends StatelessWidget {
                   fontSize: 14,
                   // Cỡ chữ 14.
 
-                  color: Colors.white60,
+                  color: AppColors.white,
                   // Màu trắng hơi mờ.
 
                   height: 1.5,
@@ -164,14 +124,10 @@ class WelcomeScreen extends StatelessWidget {
                   // ElevatedButton là nút bấm có nền.
 
                   onPressed: () {
-                    // Hàm được thực hiện khi người dùng nhấn nút.
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      // Hiển thị thông báo SnackBar ở cuối màn hình.
-
-                      const SnackBar(
-                        content: Text('Bạn đã chọn Đăng nhập'),
-                        // Nội dung thông báo.
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => const LoginScreen(),
                       ),
                     );
                   },
@@ -179,7 +135,7 @@ class WelcomeScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     // Thiết lập kiểu dáng nút.
 
-                    backgroundColor: const Color(0xFF7952C7),
+                    backgroundColor: AppColors.primary,
                     // Nền nút màu tím.
 
                     foregroundColor: Colors.white,
@@ -231,11 +187,11 @@ class WelcomeScreen extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     // Thiết lập kiểu dáng nút.
 
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     // Màu chữ trắng.
 
                     side: const BorderSide(
-                      color: Color(0xFF7952C7),
+                      color: AppColors.primary,
                       // Màu đường viền tím.
                     ),
 
@@ -263,7 +219,7 @@ class WelcomeScreen extends StatelessWidget {
                 // Dòng chữ cuối màn hình.
 
                 style: TextStyle(
-                  color: Colors.white38,
+                  color: AppColors.grey,
                   // Màu chữ xám nhạt.
 
                   fontSize: 12,

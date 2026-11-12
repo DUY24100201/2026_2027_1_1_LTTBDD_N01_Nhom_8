@@ -1,8 +1,11 @@
-import 'package:material_ui/material_ui.dart';
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 
 import '../models/song.dart';
+import 'storage_service.dart';
 
 class MusicPlayerService {
   MusicPlayerService._();
@@ -16,6 +19,17 @@ class MusicPlayerService {
 
   bool isShuffle = false;
   LoopMode loopMode = LoopMode.off;
+  static const String _legacyShuffleSettingKey = 'melody_shuffle_enabled_v1';
+  static const String _legacyRepeatSettingKey = 'melody_repeat_mode_v1';
+
+  bool _settingsLoaded = false;
+  Map<String, Object?> _settings = {};
+  Timer? _sleepTimer;
+  DateTime? _sleepTimerDeadline;
+  final StreamController<void> _sleepTimerCompleted =
+      StreamController<void>.broadcast();
+  final StreamController<Object> _sleepTimerErrors =
+      StreamController<Object>.broadcast();
 
   Song? get currentSong {
     if (currentIndex < 0 || currentIndex >= queue.length) {
@@ -24,9 +38,64 @@ class MusicPlayerService {
     return queue[currentIndex];
   }
 
+  DateTime? get sleepTimerDeadline => _sleepTimerDeadline;
+  Stream<void> get sleepTimerCompleted => _sleepTimerCompleted.stream;
+  Stream<Object> get sleepTimerErrors => _sleepTimerErrors.stream;
+
   Future<void> initialize() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
+  }
+
+  Future<void> loadPlaybackSettings() async {
+    if (_settingsLoaded) return;
+
+    final storage = StorageService.instance;
+    final rawSettings = await storage.readString(StorageService.appSettingsKey);
+    var loadedSettings = <String, Object?>{};
+    bool? legacyShuffle;
+    String? legacyRepeat;
+
+    if (rawSettings != null) {
+      final decoded = jsonDecode(rawSettings);
+      if (decoded is! Map) {
+        throw const FormatException('Dữ liệu cài đặt ứng dụng không hợp lệ.');
+      }
+      loadedSettings = Map<String, Object?>.from(decoded);
+    } else {
+      legacyShuffle = await storage.readLegacyBool(_legacyShuffleSettingKey);
+      legacyRepeat = await storage.readLegacyString(_legacyRepeatSettingKey);
+      if (legacyShuffle != null || legacyRepeat != null) {
+        loadedSettings = {'shuffle': ?legacyShuffle, 'repeat': ?legacyRepeat};
+        await storage.writeString(
+          StorageService.appSettingsKey,
+          jsonEncode(loadedSettings),
+        );
+      }
+    }
+
+    final storedShuffle = loadedSettings['shuffle'];
+    if (storedShuffle != null && storedShuffle is! bool) {
+      throw const FormatException('Cài đặt phát ngẫu nhiên không hợp lệ.');
+    }
+    final storedRepeatMode = loadedSettings['repeat'] ?? legacyRepeat;
+    if (storedRepeatMode != null && storedRepeatMode is! String) {
+      throw const FormatException('Cài đặt lặp lại không hợp lệ.');
+    }
+    final loadedLoopMode = switch (storedRepeatMode) {
+      'one' => LoopMode.one,
+      'all' => LoopMode.all,
+      _ => LoopMode.off,
+    };
+
+    if (loadedLoopMode != loopMode) {
+      await player.setLoopMode(loadedLoopMode);
+    }
+
+    isShuffle = storedShuffle as bool? ?? legacyShuffle ?? false;
+    loopMode = loadedLoopMode;
+    _settings = loadedSettings;
+    _settingsLoaded = true;
   }
 
   Future<void> setQueue(
@@ -129,22 +198,104 @@ class MusicPlayerService {
   }
 
   Future<void> toggleShuffle() async {
-    isShuffle = !isShuffle;
+    await loadPlaybackSettings();
+    final updated = !isShuffle;
+    final updatedSettings = {
+      ..._settings,
+      'shuffle': updated,
+      'repeat': loopMode.name,
+    };
+    await StorageService.instance.writeString(
+      StorageService.appSettingsKey,
+      jsonEncode(updatedSettings),
+    );
+    _settings = updatedSettings;
+    isShuffle = updated;
   }
 
   Future<void> cycleRepeatMode() async {
-    if (loopMode == LoopMode.off) {
-      loopMode = LoopMode.one;
-    } else if (loopMode == LoopMode.one) {
-      loopMode = LoopMode.all;
-    } else {
-      loopMode = LoopMode.off;
+    final updated = switch (loopMode) {
+      LoopMode.off => LoopMode.one,
+      LoopMode.one => LoopMode.all,
+      LoopMode.all => LoopMode.off,
+    };
+    await setRepeatMode(updated);
+  }
+
+  Future<void> setRepeatMode(LoopMode mode) async {
+    await loadPlaybackSettings();
+    final previousMode = loopMode;
+    final updatedSettings = {
+      ..._settings,
+      'shuffle': isShuffle,
+      'repeat': mode.name,
+    };
+    await StorageService.instance.writeString(
+      StorageService.appSettingsKey,
+      jsonEncode(updatedSettings),
+    );
+
+    try {
+      await player.setLoopMode(mode);
+    } catch (error, stackTrace) {
+      final restoredSettings = {
+        ..._settings,
+        'shuffle': isShuffle,
+        'repeat': previousMode.name,
+      };
+      try {
+        await StorageService.instance.writeString(
+          StorageService.appSettingsKey,
+          jsonEncode(restoredSettings),
+        );
+      } catch (restoreError) {
+        Error.throwWithStackTrace(
+          StateError(
+            'Không thể khôi phục cài đặt lặp lại đã lưu: $restoreError',
+          ),
+          stackTrace,
+        );
+      }
+      Error.throwWithStackTrace(error, stackTrace);
     }
 
-    await player.setLoopMode(loopMode);
+    _settings = updatedSettings;
+    loopMode = mode;
+  }
+
+  void startSleepTimer(Duration duration) {
+    if (duration <= Duration.zero) {
+      throw ArgumentError.value(duration, 'duration', 'Must be positive.');
+    }
+
+    cancelSleepTimer();
+    _sleepTimerDeadline = DateTime.now().add(duration);
+    _sleepTimer = Timer(duration, () {
+      unawaited(_stopAfterSleepTimer());
+    });
+  }
+
+  void cancelSleepTimer() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    _sleepTimerDeadline = null;
+  }
+
+  Future<void> _stopAfterSleepTimer() async {
+    _sleepTimer = null;
+    _sleepTimerDeadline = null;
+    try {
+      await player.stop();
+      _sleepTimerCompleted.add(null);
+    } catch (error, stackTrace) {
+      _sleepTimerErrors.addError(error, stackTrace);
+    }
   }
 
   Future<void> dispose() async {
+    cancelSleepTimer();
+    await _sleepTimerCompleted.close();
+    await _sleepTimerErrors.close();
     await player.dispose();
   }
 }

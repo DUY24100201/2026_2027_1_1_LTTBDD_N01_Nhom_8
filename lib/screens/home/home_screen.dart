@@ -1,8 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../models/song.dart';
+import '../search/search_screen.dart';
 import '../../widgets/intro_dialog_page.dart';
 
-import '../intro/intro_dialog.dart';
+import '../menu/menu_screen.dart';
+import '../playlist/playlist_screen.dart';
+import '../profile/profile_screen.dart';
 import '../player/player_screen.dart';
 import '../library/library_screen.dart' as music_library;
 
@@ -25,16 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String currentSong = 'Có Hẹn Với Thanh Xuân';
   String currentArtist = 'MoMo';
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      IntroDialog.show(context);
-    });
-  }
 
   final List<Map<String, dynamic>> songs = [
     {
@@ -113,14 +107,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Mở thư viện nhạc
-  Future<void> openLibrary() async {
+  Future<void> openLibrary({String initialCategory = 'Tất cả'}) async {
     setState(() {
       selectedTab = 1;
     });
 
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const music_library.LibraryScreen()),
+      MaterialPageRoute(
+        builder: (_) => IntroDialogPage(
+          child: music_library.LibraryScreen(initialCategory: initialCategory),
+        ),
+      ),
     );
 
     if (!mounted) return;
@@ -130,8 +128,75 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> openSearch() async {
+    setState(() {
+      selectedTab = 2;
+    });
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const IntroDialogPage(child: SearchScreen()),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      selectedTab = 0;
+    });
+  }
+
+  Future<void> openPlaylists() async {
+    setState(() {
+      selectedTab = 3;
+    });
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const IntroDialogPage(child: PlaylistScreen()),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      selectedTab = 0;
+    });
+  }
+
+  Future<void> openProfile() async {
+    setState(() {
+      selectedTab = 4;
+    });
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const IntroDialogPage(child: ProfileScreen()),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      selectedTab = 0;
+    });
+  }
+
+  Future<void> openMenu() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const IntroDialogPage(child: MenuScreen()),
+      ),
+    );
+  }
+
   // Mở trang phát nhạc
   void openPlayer(Map<String, dynamic> song) {
+    final track = Song.fromMap(song, songIdForName(song['name'] as String));
     setState(() {
       currentSong = song['name'] as String;
       currentArtist = song['artist'] as String;
@@ -141,11 +206,15 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PlayerScreen(
-          songName: song['name'] as String,
-          artist: song['artist'] as String,
-          coverColor: song['color'] as Color,
-          coverIcon: song['icon'] as IconData,
+        builder: (_) => IntroDialogPage(
+          child: PlayerScreen(
+            songName: song['name'] as String,
+            artist: song['artist'] as String,
+            coverColor: song['color'] as Color,
+            coverIcon: song['icon'] as IconData,
+            audioUrl: track.audioUrl,
+            song: track,
+          ),
         ),
       ),
     );
@@ -159,11 +228,11 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
 
       case 'Playlist':
-        showMessage('Chức năng Playlist đang được phát triển');
+        openPlaylists();
         break;
 
       case 'Yêu thích':
-        showMessage('Chức năng Yêu thích đang được phát triển');
+        openLibrary(initialCategory: 'Yêu thích');
         break;
 
       case 'Tải xuống':
@@ -183,6 +252,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (index == 1) {
       openLibrary();
+      return;
+    }
+
+    if (index == 2) {
+      openSearch();
+      return;
+    }
+
+    if (index == 3) {
+      openPlaylists();
+      return;
+    }
+
+    if (index == 4) {
+      openProfile();
       return;
     }
 
@@ -240,11 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                 _buildSectionTitle(
                                   'Playlist nổi bật',
-                                  onTap: () {
-                                    showMessage(
-                                      'Chức năng Playlist đang được phát triển',
-                                    );
-                                  },
+                                  onTap: openPlaylists,
                                 ),
 
                                 const SizedBox(height: 14),
@@ -274,9 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       children: [
         IconButton(
-          onPressed: () {
-            showMessage('Menu Melody Music Player');
-          },
+          onPressed: openMenu,
           icon: const Icon(Icons.menu, color: textColor, size: 28),
         ),
 
@@ -321,11 +399,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        CircleAvatar(
-          backgroundColor: primaryColor,
-          child: IconButton(
-            onPressed: () => showMessage('Tài khoản cá nhân'),
-            icon: const Icon(Icons.person, color: Colors.white),
+        InkWell(
+          onTap: openProfile,
+          borderRadius: BorderRadius.circular(24),
+          child: CircleAvatar(
+            backgroundColor: primaryColor,
+            child: const Icon(Icons.person, color: Colors.white),
           ),
         ),
       ],
@@ -576,9 +655,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return InkWell(
             borderRadius: BorderRadius.circular(17),
-            onTap: () {
-              showMessage('Playlist ${playlist['name']} đang được phát triển');
-            },
+            onTap: openPlaylists,
             child: Container(
               width: 145,
               padding: const EdgeInsets.all(13),

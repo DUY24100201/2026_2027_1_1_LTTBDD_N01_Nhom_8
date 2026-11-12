@@ -12,12 +12,15 @@ class IntroDialogPage extends StatefulWidget {
 }
 
 class _IntroDialogPageState extends State<IntroDialogPage> {
+  static bool _hasShownIntroDialog = false;
+
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || _hasShownIntroDialog) return;
+      _hasShownIntroDialog = true;
       IntroDialog.show(context);
     });
   }

@@ -12,6 +12,7 @@ import '../../models/song.dart';
 import '../../services/local_profile_service.dart';
 import '../../services/playlist_service.dart';
 import '../../widgets/intro_dialog_page.dart';
+import '../auth/login/login_screen.dart';
 import '../library/library_screen.dart' as music_library;
 import '../player/player_screen.dart';
 import '../playlist/playlist_screen.dart';
@@ -23,7 +24,9 @@ const Color _profileText = Colors.white;
 const Color _profileSubText = Color(0xFFB5B0C0);
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final Future<void> Function()? onLogout;
+
+  const ProfileScreen({super.key, this.onLogout});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -264,6 +267,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _logout() async {
+    final onLogout = widget.onLogout;
+    if (onLogout != null) {
+      await onLogout();
+      return;
+    }
+
+    await Navigator.of(context).pushAndRemoveUntil<void>(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (_) => false,
     );
   }
 
@@ -523,6 +539,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: 'Phiên bản ứng dụng',
           subtitle: _version,
           onTap: _showVersion,
+        ),
+        const SizedBox(height: 18),
+        _buildOption(
+          icon: Icons.logout_rounded,
+          title: 'Đăng xuất',
+          subtitle: 'Quay lại màn hình đăng nhập',
+          onTap: _logout,
         ),
       ],
     );

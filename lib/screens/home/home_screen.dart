@@ -17,7 +17,9 @@ const Color subTextColor = Color(0xFFB5B0C0);
 const Color primaryColor = Color(0xFFB87553);
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Future<void> Function()? onLogout;
+
+  const HomeScreen({super.key, this.onLogout});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -174,7 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const IntroDialogPage(child: ProfileScreen()),
+        builder: (_) =>
+            IntroDialogPage(child: ProfileScreen(onLogout: widget.onLogout)),
       ),
     );
 

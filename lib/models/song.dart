@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../core/constants/app_colors.dart';
+
 const List<IconData> _knownSongIcons = [
   Icons.music_note,
   Icons.music_note_rounded,
@@ -54,7 +56,7 @@ class Song {
     this.coverUrl = '',
     this.duration = Duration.zero,
     this.playCount = 0,
-    this.coverColor = const Color(0xFFB87553),
+    this.coverColor = AppColors.primary,
     this.coverIcon = Icons.music_note,
   });
 
@@ -80,7 +82,7 @@ class Song {
       coverColor: rawColor is Color
           ? rawColor
           : Color(
-              (rawColor as num?)?.toInt() ?? const Color(0xFFB87553).toARGB32(),
+              (rawColor as num?)?.toInt() ?? AppColors.primary.toARGB32(),
             ),
       coverIcon: rawIcon is IconData
           ? rawIcon

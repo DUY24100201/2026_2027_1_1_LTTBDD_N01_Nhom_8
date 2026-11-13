@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../core/constants/app_colors.dart';
 import 'song.dart';
 
 class MusicPlaylist {
@@ -14,7 +15,7 @@ class MusicPlaylist {
     required this.id,
     required this.name,
     this.description = '',
-    this.coverColor = const Color(0xFFB87553),
+    this.coverColor = AppColors.primary,
     this.coverIcon = Icons.queue_music_rounded,
     this.songs = const [],
   });
@@ -51,7 +52,7 @@ class MusicPlaylist {
       description: map['description']?.toString() ?? '',
       coverColor: Color(
         (map['coverColor'] as num?)?.toInt() ??
-            const Color(0xFFB87553).toARGB32(),
+            AppColors.primary.toARGB32(),
       ),
       coverIcon: iconDataForCodePoint(
         (map['coverIcon'] as num?)?.toInt(),

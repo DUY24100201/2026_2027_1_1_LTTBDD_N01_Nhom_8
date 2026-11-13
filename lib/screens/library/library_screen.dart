@@ -1,16 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/song.dart';
 import '../../services/local_profile_service.dart';
 import '../playlist/playlist_screen.dart';
 import '../player/player_screen.dart';
 import '../../widgets/intro_dialog_page.dart';
 
-const Color bgColor = Color(0xFF15121F);
-const Color cardColor = Color(0xFF252131);
-const Color primaryColor = Color(0xFFB87553);
-const Color textColor = Colors.white;
-const Color subTextColor = Color(0xFFB5B0C0);
+const Color bgColor = AppColors.background;
+const Color cardColor = AppColors.surface;
+const Color primaryColor = AppColors.primary;
+const Color textColor = AppColors.white;
+const Color subTextColor = AppColors.secondaryText;
 
 class LibraryScreen extends StatefulWidget {
   final String initialCategory;
@@ -122,6 +123,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'player',
           child: PlayerScreen(
             songName: song['name'] as String,
             artist: song['artist'] as String,

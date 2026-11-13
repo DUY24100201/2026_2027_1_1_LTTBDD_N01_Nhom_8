@@ -1,14 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
+
 class IntroDialog {
-  static void show(BuildContext context) {
-    showDialog(
+  static Future<void> show(BuildContext context) async {
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (dialogContext) {
         return Dialog(
-          backgroundColor: const Color(0xFFEAEAEA),
+          backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -27,7 +29,7 @@ class IntroDialog {
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.white,
                   ),
                 ),
                 const SizedBox(height: 28),
@@ -42,7 +44,10 @@ class IntroDialog {
                     ],
                   ),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, color: Colors.black),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.secondaryText,
+                  ),
                 ),
                 const SizedBox(height: 35),
                 const Text(
@@ -51,7 +56,7 @@ class IntroDialog {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.white,
                   ),
                 ),
                 const SizedBox(height: 35),
@@ -60,7 +65,7 @@ class IntroDialog {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.white,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -72,7 +77,7 @@ class IntroDialog {
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                     height: 1.6,
-                    color: Colors.black,
+                    color: AppColors.secondaryText,
                   ),
                 ),
                 const SizedBox(height: 35),
@@ -84,7 +89,7 @@ class IntroDialog {
                       Navigator.pop(dialogContext);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB87553),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),

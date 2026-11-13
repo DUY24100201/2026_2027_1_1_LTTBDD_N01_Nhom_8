@@ -5,21 +5,23 @@ import 'package:just_audio/just_audio.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/song.dart';
 import '../../services/local_profile_service.dart';
 import '../../services/music_player_service.dart';
 import '../../services/playlist_service.dart';
 import '../../widgets/intro_dialog_page.dart';
+import '../account/account_management_screen.dart';
 import '../library/library_screen.dart';
 import '../player/player_screen.dart';
 import '../playlist/playlist_screen.dart';
 import '../profile/profile_screen.dart';
 
-const Color _menuBackground = Color(0xFF15121F);
-const Color _menuCardColor = Color(0xFF252131);
-const Color _menuAccent = Color(0xFFB87553);
-const Color _menuText = Colors.white;
-const Color _menuSubText = Color(0xFFB5B0C0);
+const Color _menuBackground = AppColors.background;
+const Color _menuCardColor = AppColors.surface;
+const Color _menuAccent = AppColors.primary;
+const Color _menuText = AppColors.white;
+const Color _menuSubText = AppColors.secondaryText;
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -113,16 +115,22 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  Future<void> _openProfile() => _openPage(const ProfileScreen());
+  Future<void> _openProfile() => _openPage('profile', const ProfileScreen());
 
-  Future<void> _openLibrary() => _openPage(const LibraryScreen());
+  Future<void> _openAccountManagement() =>
+      _openPage('account_management', const AccountManagementScreen());
 
-  Future<void> _openPlaylists() => _openPage(const PlaylistScreen());
+  Future<void> _openLibrary() => _openPage('library', const LibraryScreen());
 
-  Future<void> _openPage(Widget page) async {
+  Future<void> _openPlaylists() =>
+      _openPage('playlist', const PlaylistScreen());
+
+  Future<void> _openPage(String screenId, Widget page) async {
     await Navigator.push<void>(
       context,
-      MaterialPageRoute(builder: (_) => IntroDialogPage(child: page)),
+      MaterialPageRoute(
+        builder: (_) => IntroDialogPage(screenId: screenId, child: page),
+      ),
     );
   }
 
@@ -186,6 +194,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
   Future<void> _openPlayer(Song song) async {
     await _openPage(
+      'player',
       PlayerScreen(
         songName: song.name,
         artist: song.artist,
@@ -300,8 +309,8 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _showAppearance() => _showInformation(
     title: 'Giao diện',
     message:
-        'Ứng dụng hiện sử dụng giao diện tối với màu được định nghĩa trực tiếp '
-        'trong các màn hình; chưa hỗ trợ chuyển sang giao diện sáng.',
+        'Ứng dụng hiện sử dụng giao diện tối tím; tùy chọn đổi giao diện '
+        'chưa khả dụng.',
   );
 
   Future<void> _showNotifications() => _showInformation(
@@ -472,6 +481,12 @@ class _MenuScreenState extends State<MenuScreen> {
             onTap: _openProfile,
           ),
           _menuTile(
+            icon: Icons.manage_accounts_outlined,
+            title: 'Quản lý tài khoản',
+            subtitle: 'Danh sách người dùng đã đăng ký',
+            onTap: _openAccountManagement,
+          ),
+          _menuTile(
             icon: Icons.library_music_rounded,
             title: 'Thư viện của tôi',
             subtitle: 'Bài hát và mục yêu thích',
@@ -583,7 +598,7 @@ class _MenuScreenState extends State<MenuScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF3A334B)),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(children: children),
       ),
@@ -625,7 +640,7 @@ class _MenuScreenState extends State<MenuScreen> {
             height: 1,
             indent: 58,
             endIndent: 14,
-            color: Color(0xFF3A334B),
+            color: AppColors.border,
           ),
       ],
     );

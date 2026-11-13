@@ -1,15 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/song.dart';
 import '../playlist/playlist_screen.dart';
 import '../player/player_screen.dart';
 import '../../widgets/intro_dialog_page.dart';
 
-const Color bgColor = Color(0xFF15121F);
-const Color cardColor = Color(0xFF252131);
-const Color primaryColor = Color(0xFFB87553);
-const Color textColor = Colors.white;
-const Color subTextColor = Color(0xFFB5B0C0);
+const Color bgColor = AppColors.background;
+const Color cardColor = AppColors.surface;
+const Color primaryColor = AppColors.primary;
+const Color textColor = AppColors.white;
+const Color subTextColor = AppColors.secondaryText;
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -133,6 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'player',
           child: PlayerScreen(
             songName: song['name'] as String,
             artist: song['artist'] as String,
@@ -220,7 +222,7 @@ class _SearchScreenState extends State<SearchScreen> {
         border: Border.all(
           color: searchFocusNode.hasFocus
               ? primaryColor.withValues(alpha: 0.6)
-              : Colors.white.withValues(alpha: 0.04),
+              : AppColors.border,
         ),
       ),
       child: Row(
@@ -445,7 +447,7 @@ class _SearchScreenState extends State<SearchScreen> {
         'title': 'Nhạc Việt',
         'subtitle': 'Những ca khúc Việt Nam',
         'icon': Icons.music_note_rounded,
-        'color': const Color(0xFFB87553),
+        'color': AppColors.primary,
         'query': 'Việt',
       },
       {

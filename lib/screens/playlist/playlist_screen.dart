@@ -2,17 +2,18 @@ import 'dart:math';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/music_playlist.dart';
 import '../../models/song.dart';
 import '../../services/playlist_service.dart';
 import '../../widgets/intro_dialog_page.dart';
 import '../player/player_screen.dart';
 
-const Color _bgColor = Color(0xFF15121F);
-const Color _cardColor = Color(0xFF252131);
-const Color _primaryColor = Color(0xFFB87553);
-const Color _textColor = Colors.white;
-const Color _subTextColor = Color(0xFFB5B0C0);
+const Color _bgColor = AppColors.background;
+const Color _cardColor = AppColors.surface;
+const Color _primaryColor = AppColors.primary;
+const Color _textColor = AppColors.white;
+const Color _subTextColor = AppColors.secondaryText;
 
 const List<Color> _coverColors = [
   Color(0xFFB87553),
@@ -152,6 +153,7 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'playlist_detail',
           child: PlaylistDetailScreen(playlistId: playlist.id),
         ),
       ),
@@ -549,6 +551,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'player',
           child: PlayerScreen(
             songName: song.name,
             artist: song.artist,

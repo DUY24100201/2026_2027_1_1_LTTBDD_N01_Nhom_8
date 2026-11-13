@@ -1,15 +1,16 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/song.dart';
 import '../../services/local_profile_service.dart';
 import '../../services/music_player_service.dart';
 
-const Color bgColor = Color(0xFF15121F);
-const Color cardColor = Color(0xFF252131);
-const Color primaryColor = Color(0xFFB87553);
-const Color textColor = Colors.white;
-const Color subTextColor = Color(0xFFB5B0C0);
+const Color bgColor = AppColors.background;
+const Color cardColor = AppColors.surface;
+const Color primaryColor = AppColors.primary;
+const Color textColor = AppColors.white;
+const Color subTextColor = AppColors.secondaryText;
 
 class PlayerScreen extends StatefulWidget {
   final String songName;
@@ -278,7 +279,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     trackHeight: 5,
                     activeTrackColor: primaryColor,
                     inactiveTrackColor: cardColor,
-                    thumbColor: const Color(0xFFE5B49B),
+                    thumbColor: primaryColor,
                     overlayColor: primaryColor.withValues(alpha: 0.14),
                     trackShape: const RoundedRectSliderTrackShape(),
                     thumbShape: const RoundSliderThumbShape(
@@ -380,7 +381,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           playing
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
-                          color: const Color(0xFF211722),
+                          color: AppColors.white,
                           size: 43,
                         ),
                 ),
@@ -522,7 +523,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             color: cardColor,
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.04),
+                              color: AppColors.border,
                             ),
                           ),
                           child: Row(

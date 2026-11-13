@@ -1,9 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 
 class AppColors {
-  static const background = Color(0xFF15121F);
-  static const primary = Color(0xFF7952C7);
   static const white = Color(0xFFFFFFFF);
-  static const grey = Color(0xFFA1A0A5);
-  static const inputBackground = Color(0xFF241E2D);
+  static const outerBackground = white;
+  static const background = Color(0xFF15121F);
+  static const surface = Color(0xFF252131);
+  static const primary = Color(0xFF8052CC);
+  static const secondaryText = Color(0xFFB5B0C0);
+  static const border = Color(0xFF3A334B);
+
+  static const inputBackground = surface;
+  static const grey = secondaryText;
 }

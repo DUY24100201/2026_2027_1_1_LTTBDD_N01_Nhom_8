@@ -7,8 +7,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/local_user_profile.dart';
 import '../../models/song.dart';
+import '../../services/auth_service.dart';
 import '../../services/local_profile_service.dart';
 import '../../services/playlist_service.dart';
 import '../../widgets/intro_dialog_page.dart';
@@ -17,11 +19,11 @@ import '../library/library_screen.dart' as music_library;
 import '../player/player_screen.dart';
 import '../playlist/playlist_screen.dart';
 
-const Color _profileBackground = Color(0xFF15121F);
-const Color _profileCard = Color(0xFF252131);
-const Color _profileAccent = Color(0xFFB87553);
-const Color _profileText = Colors.white;
-const Color _profileSubText = Color(0xFFB5B0C0);
+const Color _profileBackground = AppColors.background;
+const Color _profileCard = AppColors.surface;
+const Color _profileAccent = AppColors.primary;
+const Color _profileText = AppColors.white;
+const Color _profileSubText = AppColors.secondaryText;
 
 class ProfileScreen extends StatefulWidget {
   final Future<void> Function()? onLogout;
@@ -114,13 +116,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final form = await _showEditProfileDialog(context, _profile);
     if (form == null) return;
 
-    final updated = _profile.copyWith(
-      displayName: form.displayName,
-      email: form.email,
-      clearEmail: form.email == null,
-    );
-
     try {
+      final currentUser = AuthService.instance.getCurrentUser();
+      final updatedUser = currentUser == null
+          ? null
+          : await AuthService.instance.updateCurrentUserProfile(
+              name: form.displayName,
+              email: form.email ?? currentUser.email,
+            );
+      final updated = _profile.copyWith(
+        displayName: updatedUser?.name ?? form.displayName,
+        email: updatedUser?.email ?? form.email,
+        clearEmail: updatedUser == null && form.email == null,
+        joinedAt: updatedUser?.createdAt,
+      );
       await _profileService.saveProfile(updated);
       await _profileService.reload();
       if (!mounted) return;
@@ -177,6 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => const IntroDialogPage(
+          screenId: 'library',
           child: music_library.LibraryScreen(initialCategory: 'Yêu thích'),
         ),
       ),
@@ -188,7 +198,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => const IntroDialogPage(child: PlaylistScreen()),
+        builder: (_) => const IntroDialogPage(
+          screenId: 'playlist',
+          child: PlaylistScreen(),
+        ),
       ),
     );
     await _refreshCounts();
@@ -257,6 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'player',
           child: PlayerScreen(
             songName: song.name,
             artist: song.artist,
@@ -271,16 +285,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
-    final onLogout = widget.onLogout;
-    if (onLogout != null) {
-      await onLogout();
-      return;
-    }
+    try {
+      final onLogout = widget.onLogout;
+      if (onLogout != null) {
+        await onLogout();
+        return;
+      }
 
-    await Navigator.of(context).pushAndRemoveUntil<void>(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-      (_) => false,
-    );
+      await Navigator.of(context).pushAndRemoveUntil<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => const IntroDialogPage(
+            screenId: 'login',
+            child: LoginScreen(),
+          ),
+        ),
+        (_) => false,
+      );
+    } catch (error) {
+      _showMessage('Không thể đăng xuất: $error');
+    }
   }
 
   Future<void> _showAppearance() {
@@ -552,17 +575,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileCard() {
-    final displayName = _profile.displayName.trim().isEmpty
-        ? 'Người nghe nhạc'
-        : _profile.displayName;
-    final email = _profile.email;
+    final currentUser = AuthService.instance.getCurrentUser();
+    final displayName = currentUser == null
+        ? (_profile.displayName.trim().isEmpty
+              ? 'Người nghe nhạc'
+              : _profile.displayName)
+        : currentUser.name;
+    final email = currentUser?.email ?? _profile.email;
+    final joinedAt = currentUser?.createdAt ?? _profile.joinedAt;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: _profileCard,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF3A334B)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
@@ -608,10 +635,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: _profileSubText, fontSize: 13),
           ),
-          if (_profile.joinedAt != null) ...[
+          if (joinedAt != null) ...[
             const SizedBox(height: 7),
             Text(
-              'Tham gia ${_formatDate(_profile.joinedAt!)}',
+              'Tham gia ${_formatDate(joinedAt)}',
               style: const TextStyle(color: _profileSubText, fontSize: 12),
             ),
           ],
@@ -843,6 +870,8 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final hasSignedInAccount = AuthService.instance.getCurrentUser() != null;
+
     return AlertDialog(
       backgroundColor: _profileCard,
       title: const Text(
@@ -894,9 +923,14 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                   },
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Thông tin chỉ được lưu trên thiết bị, không dùng để đăng nhập.',
-                  style: TextStyle(color: _profileSubText, fontSize: 11),
+                Text(
+                  hasSignedInAccount
+                      ? 'Tên và email sẽ được cập nhật cho tài khoản đang đăng nhập.'
+                      : 'Thông tin chỉ được lưu trên thiết bị, không dùng để đăng nhập.',
+                  style: const TextStyle(
+                    color: _profileSubText,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),

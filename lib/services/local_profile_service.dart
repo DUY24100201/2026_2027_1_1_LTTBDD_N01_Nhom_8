@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../models/local_user_profile.dart';
 import '../models/song.dart';
+import 'auth_service.dart';
 import 'storage_service.dart';
 
 class LocalProfileService {
@@ -12,6 +13,8 @@ class LocalProfileService {
   static const String _profileKey = StorageService.userProfileKey;
   static const String _favoriteIdsKey = StorageService.favoriteSongsKey;
   static const String _recentSongsKey = StorageService.listeningHistoryKey;
+  static const String _profileMigrationOwnerKey =
+      'user_profile_migration_owner_id';
   static const String _legacyProfileKey = 'melody_local_profile_v1';
   static const String _legacyFavoriteIdsKey = 'melody_favorite_song_ids_v1';
   static const String _legacyRecentSongsKey = 'melody_recent_songs_v1';
@@ -25,21 +28,52 @@ class LocalProfileService {
   LocalUserProfile _profile = const LocalUserProfile();
   Set<String> _favoriteIds = {};
   List<Song> _recentSongs = [];
+  String? _activeAccountId;
   bool _loaded = false;
 
   LocalUserProfile get profile => _profile;
   Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
   List<Song> get recentlyPlayed => List.unmodifiable(_recentSongs);
 
+  String get _activeProfileKey => _activeAccountId == null
+      ? _profileKey
+      : '${_profileKey}_$_activeAccountId';
+
   Future<void> load() async {
+    final currentUser = AuthService.instance.getCurrentUser();
+    final currentAccountId = currentUser?.id;
+    if (_activeAccountId != currentAccountId) {
+      _activeAccountId = currentAccountId;
+      _loaded = false;
+    }
     if (_loaded) return;
 
     final storage = StorageService.instance;
-    var profileJson = await storage.readString(_profileKey);
+    final activeProfileKey = _activeProfileKey;
+    var profileJson = await storage.readString(activeProfileKey);
     var migrateProfile = false;
     if (profileJson == null) {
-      profileJson = await storage.readLegacyString(_legacyProfileKey);
-      migrateProfile = profileJson != null;
+      if (_activeAccountId == null) {
+        profileJson = await storage.readLegacyString(_legacyProfileKey);
+        migrateProfile = profileJson != null;
+      } else {
+        final migrationOwner = await storage.readString(
+          _profileMigrationOwnerKey,
+        );
+        if (migrationOwner == null || migrationOwner == _activeAccountId) {
+          profileJson = await storage.readString(_profileKey);
+          if (profileJson == null) {
+            profileJson = await storage.readLegacyString(_legacyProfileKey);
+          }
+          migrateProfile = profileJson != null;
+          if (migrationOwner == null) {
+            await storage.writeString(
+              _profileMigrationOwnerKey,
+              _activeAccountId!,
+            );
+          }
+        }
+      }
     }
 
     var loadedProfile = const LocalUserProfile();
@@ -89,8 +123,37 @@ class LocalProfileService {
           .toList();
     }
 
-    if (migrateProfile) {
-      await storage.writeString(_profileKey, profileJson!);
+    var profileChangedForAccount = false;
+    if (currentUser != null && currentUser.id == _activeAccountId) {
+      profileChangedForAccount =
+          loadedProfile.displayName != currentUser.name ||
+          loadedProfile.email != currentUser.email ||
+          loadedProfile.joinedAt != currentUser.createdAt;
+      loadedProfile = loadedProfile.copyWith(
+        displayName: currentUser.name,
+        email: currentUser.email,
+        joinedAt: currentUser.createdAt,
+      );
+    }
+
+    if (_activeAccountId != null) {
+      final migrationOwner = await storage.readString(
+        _profileMigrationOwnerKey,
+      );
+      if (migrationOwner == null) {
+        await storage.writeString(
+          _profileMigrationOwnerKey,
+          _activeAccountId!,
+        );
+      }
+    }
+    if (migrateProfile ||
+        profileChangedForAccount ||
+        (_activeAccountId != null && profileJson == null)) {
+      await storage.writeString(
+        activeProfileKey,
+        jsonEncode(loadedProfile.toMap()),
+      );
     }
     if (migrateFavorites) {
       await storage.writeString(
@@ -126,7 +189,7 @@ class LocalProfileService {
   Future<void> saveProfile(LocalUserProfile profile) async {
     await load();
     await StorageService.instance.writeString(
-      _profileKey,
+      _activeProfileKey,
       jsonEncode(profile.toMap()),
     );
     _profile = profile;

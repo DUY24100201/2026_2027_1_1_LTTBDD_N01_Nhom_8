@@ -1,5 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
+import '../../widgets/intro_dialog_page.dart';
+
 class IntroScreen extends StatelessWidget {
   final Widget destination;
 
@@ -8,7 +11,7 @@ class IntroScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF15121F),
+      backgroundColor: AppColors.outerBackground,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -18,11 +21,11 @@ class IntroScreen extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 420, minHeight: 480),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 35),
               decoration: BoxDecoration(
-                color: const Color(0xFFEAEAEA),
+                color: AppColors.background,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: AppColors.background.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -38,7 +41,7 @@ class IntroScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 19,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.white,
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -53,7 +56,10 @@ class IntroScreen extends StatelessWidget {
                       ],
                     ),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Colors.black),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.secondaryText,
+                    ),
                   ),
                   const SizedBox(height: 35),
                   const Text(
@@ -62,7 +68,7 @@ class IntroScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.white,
                     ),
                   ),
                   const SizedBox(height: 35),
@@ -71,7 +77,7 @@ class IntroScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -83,7 +89,7 @@ class IntroScreen extends StatelessWidget {
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                       height: 1.6,
-                      color: Colors.black,
+                      color: AppColors.secondaryText,
                     ),
                   ),
                   const SizedBox(height: 38),
@@ -92,8 +98,8 @@ class IntroScreen extends StatelessWidget {
                     height: 45,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB87553),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
@@ -102,7 +108,12 @@ class IntroScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => destination),
+                          MaterialPageRoute(
+                            builder: (_) => IntroDialogPage(
+                              screenId: 'destination',
+                              child: destination,
+                            ),
+                          ),
                         );
                       },
                       child: const Text(

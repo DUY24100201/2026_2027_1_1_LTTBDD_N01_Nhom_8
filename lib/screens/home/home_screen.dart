@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../models/song.dart';
 import '../search/search_screen.dart';
 import '../../widgets/intro_dialog_page.dart';
@@ -10,11 +11,11 @@ import '../profile/profile_screen.dart';
 import '../player/player_screen.dart';
 import '../library/library_screen.dart' as music_library;
 
-const Color bgColor = Color(0xFF15121F);
-const Color cardColor = Color(0xFF252131);
-const Color textColor = Colors.white;
-const Color subTextColor = Color(0xFFB5B0C0);
-const Color primaryColor = Color(0xFFB87553);
+const Color bgColor = AppColors.background;
+const Color cardColor = AppColors.surface;
+const Color textColor = AppColors.white;
+const Color subTextColor = AppColors.secondaryText;
+const Color primaryColor = AppColors.primary;
 
 class HomeScreen extends StatefulWidget {
   final Future<void> Function()? onLogout;
@@ -69,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'name': 'Top Hits Việt Nam',
       'icon': Icons.headphones,
-      'color': const Color(0xFF7952C7),
+      'color': AppColors.primary,
     },
     {
       'name': 'Lo-fi Chill',
@@ -118,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'library',
           child: music_library.LibraryScreen(initialCategory: initialCategory),
         ),
       ),
@@ -138,7 +140,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const IntroDialogPage(child: SearchScreen()),
+        builder: (_) => const IntroDialogPage(
+          screenId: 'search',
+          child: SearchScreen(),
+        ),
       ),
     );
 
@@ -157,7 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const IntroDialogPage(child: PlaylistScreen()),
+        builder: (_) => const IntroDialogPage(
+          screenId: 'playlist',
+          child: PlaylistScreen(),
+        ),
       ),
     );
 
@@ -176,8 +184,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            IntroDialogPage(child: ProfileScreen(onLogout: widget.onLogout)),
+        builder: (_) => IntroDialogPage(
+          screenId: 'profile',
+          child: ProfileScreen(onLogout: widget.onLogout),
+        ),
       ),
     );
 
@@ -192,7 +202,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const IntroDialogPage(child: MenuScreen()),
+        builder: (_) => const IntroDialogPage(
+          screenId: 'menu',
+          child: MenuScreen(),
+        ),
       ),
     );
   }
@@ -210,6 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => IntroDialogPage(
+          screenId: 'player',
           child: PlayerScreen(
             songName: song['name'] as String,
             artist: song['artist'] as String,
@@ -290,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final phoneWidth = screenWidth > 430 ? 390.0 : screenWidth;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0B13),
+      backgroundColor: AppColors.outerBackground,
       body: Center(
         child: SizedBox(
           width: phoneWidth,
@@ -361,14 +375,14 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: const Icon(Icons.menu, color: textColor, size: 28),
         ),
 
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: primaryColor,
-            borderRadius: BorderRadius.circular(14),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Image.asset(
+            'assets/imgs/logo.png',
+            width: 56,
+            height: 56,
+            fit: BoxFit.contain,
           ),
-          child: const Icon(Icons.music_note, color: Colors.white, size: 32),
         ),
 
         const SizedBox(width: 12),
@@ -421,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF49385E)),
+        border: Border.all(color: AppColors.border),
         gradient: const LinearGradient(
           colors: [Color(0xFF302541), Color(0xFF211B30), Color(0xFF49316B)],
           begin: Alignment.topLeft,
@@ -504,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: const Color(0xFF3A334B)),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -596,16 +610,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(
                           song['icon'] as IconData,
-                          color: Colors.white70,
+                          color: subTextColor,
                           size: 48,
                         ),
 
-                        const Positioned(
+                        Positioned(
                           right: 8,
                           bottom: 8,
                           child: CircleAvatar(
                             radius: 15,
-                            backgroundColor: Colors.black54,
+                            backgroundColor: bgColor.withValues(alpha: 0.72),
                             child: Icon(
                               Icons.play_arrow,
                               color: Colors.white,
@@ -664,7 +678,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(17),
-                border: Border.all(color: const Color(0xFF49385E)),
+                border: Border.all(color: AppColors.border),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -706,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFF49385E)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -803,7 +817,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: const BoxDecoration(
         color: bgColor,
-        border: Border(top: BorderSide(color: Color(0xFF302A3D))),
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: SafeArea(
         top: false,

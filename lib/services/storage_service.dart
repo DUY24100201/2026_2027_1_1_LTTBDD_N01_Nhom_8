@@ -14,6 +14,9 @@ class StorageService {
   static const String favoriteSongsKey = 'favorite_songs';
   static const String listeningHistoryKey = 'listening_history';
   static const String appSettingsKey = 'app_settings';
+  static const String userAccountsKey = 'user_accounts';
+  static const String authSessionKey = 'auth_session_user_id';
+  static const String introDialogSeenKeyPrefix = 'intro_dialog_seen';
 
   Future<void>? _initialization;
   Map<String, Object>? _mockValues;

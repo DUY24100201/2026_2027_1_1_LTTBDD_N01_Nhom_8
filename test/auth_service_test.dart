@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lttbdd_nhom8/screens/auth/register/register_screen.dart';
-import 'package:lttbdd_nhom8/services/auth_service.dart';
+import 'package:lttbdd_nhom8/admin/models/admin_model.dart';
+import 'package:lttbdd_nhom8/auth/register_screen.dart';
+import 'package:lttbdd_nhom8/admin/admin_storage_service.dart';
+import 'package:lttbdd_nhom8/auth/auth_service.dart';
 import 'package:lttbdd_nhom8/services/storage_service.dart';
+import 'package:lttbdd_nhom8/user/user_storage_service.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
@@ -39,6 +42,8 @@ void main() {
       storedAccounts.single as Map,
     );
     expect(storedAccount['id'], user.id);
+    expect(storedAccount['role'], 'USER');
+    expect(user.role, UserRole.user);
     expect(storedAccount.containsKey('password'), isFalse);
     expect(storedAccount['passwordHash'], isNot('secure-passphrase'));
     expect(storedAccount['algorithm'], 'pbkdf2-hmac-sha256');
@@ -79,7 +84,10 @@ void main() {
     final restartedService = AuthService(storage: storage);
     await restartedService.initialize();
     expect(restartedService.getCurrentUser()?.id, user.id);
-    expect((await restartedService.getAllUsers()).single.id, user.id);
+    await expectLater(
+      restartedService.getAllUsers(),
+      throwsA(isA<AuthorizationException>()),
+    );
     expect(
       (await restartedService.getUserByEmail('LISTENER@example.test'))?.id,
       user.id,
@@ -89,9 +97,8 @@ void main() {
     expect(restartedService.getCurrentUser(), isNull);
     expect(await storage.readString(StorageService.authSessionKey), '');
     expect(
-      (jsonDecode(
-        (await storage.readString(StorageService.userAccountsKey))!,
-      ) as List),
+      (jsonDecode((await storage.readString(StorageService.userAccountsKey))!)
+          as List),
       hasLength(1),
     );
     expect(
@@ -128,6 +135,131 @@ void main() {
     expect(service.getCurrentUser()?.id, 'vector-user');
   });
 
+  test(
+    'locally stored ADMIN role cannot grant management permissions',
+    () async {
+      final account = {
+        'id': 'local-admin',
+        'name': 'Local Admin',
+        'email': 'admin@example.test',
+        'createdAt': '2026-01-01T00:00:00.000Z',
+        'salt': 'MDEyMzQ1Njc4OWFiY2RlZg==',
+        'passwordHash': 'RTZCeRbsxNsX/5cC2qwamnVfsX+aVE68Tp3EzhaJES4=',
+        'algorithm': 'pbkdf2-hmac-sha256',
+        'iterations': 2,
+        'role': 'ADMIN',
+      };
+      storage.setMockInitialValues({
+        StorageService.userAccountsKey: jsonEncode([account]),
+        StorageService.authSessionKey: 'local-admin',
+      });
+
+      final service = AuthService(storage: storage);
+      await service.initialize();
+
+      expect(service.getCurrentUser()?.role, UserRole.user);
+      expect(service.isAdmin, isFalse);
+      expect(await service.login('admin@example.test', 'password'), isTrue);
+      expect(service.getCurrentUser()?.role, UserRole.user);
+      expect(
+        () => service.requireAdmin(),
+        throwsA(isA<AuthorizationException>()),
+      );
+      await expectLater(
+        service.getAllUsers(),
+        throwsA(isA<AuthorizationException>()),
+      );
+      await expectLater(
+        UserStorageService(storage: storage).readUsers(),
+        throwsA(isA<UserStorageAuthorizationException>()),
+      );
+      await expectLater(
+        AdminStorageService(storage: storage).readAdmins(),
+        throwsA(isA<AdminStorageAuthorizationException>()),
+      );
+
+      final storedAccounts = jsonDecode(
+        (await storage.readString(StorageService.userAccountsKey))!,
+      ) as List<dynamic>;
+      expect((storedAccounts.single as Map<String, dynamic>)['role'], 'USER');
+    },
+  );
+
+  test('trusted Admin authentication stays separate from User login', () async {
+    final admin = AdminModel(
+      id: 'trusted-admin',
+      name: 'Trusted Admin',
+      email: 'admin@example.test',
+      createdAt: DateTime.utc(2026),
+    );
+    storage.setMockInitialValues({
+      StorageService.userAccountsKey: jsonEncode([
+        {
+          'id': 'vector-user',
+          'name': 'Regular User',
+          'email': 'user@example.test',
+          'createdAt': '2026-01-01T00:00:00.000Z',
+          'salt': 'MDEyMzQ1Njc4OWFiY2RlZg==',
+          'passwordHash': 'RTZCeRbsxNsX/5cC2qwamnVfsX+aVE68Tp3EzhaJES4=',
+          'algorithm': 'pbkdf2-hmac-sha256',
+          'iterations': 2,
+        },
+      ]),
+      StorageService.authSessionKey: '',
+    });
+    final adminStorage = AdminStorageService(
+      storage: storage,
+      authority: _TrustedAdminAuthority(admin, password: 'admin-password'),
+    );
+    final userStorage = UserStorageService(storage: storage);
+    final service = AuthService(
+      storage: storage,
+      userStorage: userStorage,
+      adminStorage: adminStorage,
+    );
+
+    await service.initialize();
+    expect(await service.login('admin@example.test', 'admin-password'), isTrue);
+    expect(service.getCurrentUser()?.role, UserRole.admin);
+    expect((await service.getAllAdmins()).single.id, admin.id);
+
+    final storedAdmins = jsonDecode(
+      (await storage.readString(StorageService.adminAccountsKey))!,
+    ) as List<dynamic>;
+    expect(storedAdmins.single['password'], isNull);
+    expect(storedAdmins.single['passwordHash'], isNull);
+    final secondAdmin = await adminStorage.saveAdmin(
+      AdminModel(
+        id: 'admin-two',
+        name: 'Second Admin',
+        email: 'admin-two@example.test',
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+    expect(
+      (await adminStorage.searchAdmins('second')).single.id,
+      secondAdmin.id,
+    );
+    await adminStorage.updateAdmin(secondAdmin.copyWith(name: 'Updated Admin'));
+    expect((await service.getAllAdmins()).last.name, 'Updated Admin');
+
+    final users = await userStorage.readUsers();
+    expect(users.single.email, 'user@example.test');
+    expect(
+      (await userStorage.searchUsers('regular')).single.id,
+      users.single.id,
+    );
+    await userStorage.updateUser(users.single.copyWith(name: 'Updated User'));
+
+    expect(await service.login('user@example.test', 'password'), isTrue);
+    expect(service.getCurrentUser()?.role, UserRole.user);
+    expect(service.getCurrentUser()?.name, 'Updated User');
+    await expectLater(
+      service.getAllUsers(),
+      throwsA(isA<AuthorizationException>()),
+    );
+  });
+
   testWidgets('registration rejects mismatched password confirmation', (
     tester,
   ) async {
@@ -137,10 +269,7 @@ void main() {
       find.byType(TextField).at(1),
       'listener@example.test',
     );
-    await tester.enterText(
-      find.byType(TextField).at(2),
-      'secure-passphrase',
-    );
+    await tester.enterText(find.byType(TextField).at(2), 'secure-passphrase');
     await tester.enterText(
       find.byType(TextField).at(3),
       'different-passphrase',
@@ -173,14 +302,8 @@ void main() {
       find.byType(TextField).at(1),
       'listener@example.test',
     );
-    await tester.enterText(
-      find.byType(TextField).at(2),
-      'secure-passphrase',
-    );
-    await tester.enterText(
-      find.byType(TextField).at(3),
-      'secure-passphrase',
-    );
+    await tester.enterText(find.byType(TextField).at(2), 'secure-passphrase');
+    await tester.enterText(find.byType(TextField).at(3), 'secure-passphrase');
 
     final registerButton = find.byType(ElevatedButton).last;
     await tester.ensureVisible(registerButton);
@@ -197,4 +320,19 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('Đăng ký thất bại: Lỗi lưu tài khoản.'), findsOneWidget);
   });
+}
+
+class _TrustedAdminAuthority implements AdminAuthenticationAuthority {
+  const _TrustedAdminAuthority(this.admin, {required this.password});
+
+  final AdminModel admin;
+  final String password;
+
+  @override
+  Future<AdminModel?> authenticateAdmin(String email, String value) async =>
+      email == admin.email && value == password ? admin : null;
+
+  @override
+  Future<AdminModel?> restoreAdminSession(String adminId) async =>
+      adminId == admin.id ? admin : null;
 }

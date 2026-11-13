@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:lttbdd_nhom8/models/music_playlist.dart';
-import 'package:lttbdd_nhom8/models/song.dart';
-import 'package:lttbdd_nhom8/services/playlist_service.dart';
+import 'package:lttbdd_nhom8/music/models/music_playlist.dart';
+import 'package:lttbdd_nhom8/music/models/song.dart';
+import 'package:lttbdd_nhom8/music/playlist_service.dart';
 import 'package:lttbdd_nhom8/services/storage_service.dart';
 
 void main() {

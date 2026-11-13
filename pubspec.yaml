@@ -42,6 +42,7 @@ dependencies:
   web: ^1.1.2
   file_picker: ^13.3.3
   package_info_plus: ^10.2.2
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

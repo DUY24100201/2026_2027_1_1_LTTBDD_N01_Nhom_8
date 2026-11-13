@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import 'storage_backend_io.dart'
-    if (dart.library.js_interop) 'storage_backend_web.dart'
+import 'package:lttbdd_nhom8/services/storage_backend_io.dart'
+    if (dart.library.js_interop) 'package:lttbdd_nhom8/services/storage_backend_web.dart'
     as backend;
 
 class StorageService {
@@ -14,12 +14,16 @@ class StorageService {
   static const String favoriteSongsKey = 'favorite_songs';
   static const String listeningHistoryKey = 'listening_history';
   static const String appSettingsKey = 'app_settings';
+  static const String sharedSongsKey = 'shared_songs';
   static const String userAccountsKey = 'user_accounts';
+  static const String adminAccountsKey = 'admin_accounts';
   static const String authSessionKey = 'auth_session_user_id';
+  static const String authSessionAccountKey = 'auth_session_account';
   static const String introDialogSeenKeyPrefix = 'intro_dialog_seen';
 
   Future<void>? _initialization;
   Map<String, Object>? _mockValues;
+  Map<String, Uint8List>? _mockBinaryValues;
 
   Future<void> initialize() {
     if (_mockValues != null) return Future<void>.value();
@@ -51,6 +55,56 @@ class StorageService {
         return;
       }
       await backend.writeString(key, value);
+    });
+  }
+
+  Future<void> writeBinary(String key, Uint8List bytes) {
+    return _access('lưu tệp phương tiện "$key"', () async {
+      final values = _mockBinaryValues;
+      if (values != null) {
+        values[key] = Uint8List.fromList(bytes);
+        return;
+      }
+      await backend.writeBinary(key, bytes);
+    });
+  }
+
+  Future<Uint8List?> readBinary(String key) {
+    return _access('đọc tệp phương tiện "$key"', () async {
+      final values = _mockBinaryValues;
+      if (values != null) {
+        final bytes = values[key];
+        return bytes == null ? null : Uint8List.fromList(bytes);
+      }
+      return backend.readBinary(key);
+    });
+  }
+
+  Future<void> deleteBinary(String key) {
+    return _access('xóa tệp phương tiện "$key"', () async {
+      final values = _mockBinaryValues;
+      if (values != null) {
+        values.remove(key);
+        return;
+      }
+      await backend.deleteBinary(key);
+    });
+  }
+
+  Future<String?> resolveStoredAudio(String key) {
+    return _access('mở tệp âm thanh "$key"', () async {
+      final values = _mockBinaryValues;
+      if (values != null) {
+        return values.containsKey(key) ? 'memory://$key' : null;
+      }
+      return backend.resolveStoredAudio(key);
+    });
+  }
+
+  Future<void> releaseStoredAudio(String source) {
+    return _access('giải phóng tệp âm thanh', () async {
+      if (_mockBinaryValues != null) return;
+      await backend.releaseStoredAudio(source);
     });
   }
 
@@ -94,6 +148,7 @@ class StorageService {
   @visibleForTesting
   void setMockInitialValues(Map<String, Object> values) {
     _mockValues = Map<String, Object>.from(values);
+    _mockBinaryValues = <String, Uint8List>{};
     _initialization = null;
   }
 }

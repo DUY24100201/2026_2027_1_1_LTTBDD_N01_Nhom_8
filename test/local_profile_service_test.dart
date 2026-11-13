@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lttbdd_nhom8/models/local_user_profile.dart';
-import 'package:lttbdd_nhom8/models/song.dart';
+import 'package:lttbdd_nhom8/user/models/local_user_profile.dart';
+import 'package:lttbdd_nhom8/music/models/song.dart';
 import 'package:lttbdd_nhom8/services/local_profile_service.dart';
 import 'package:lttbdd_nhom8/services/storage_service.dart';
 

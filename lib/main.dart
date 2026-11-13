@@ -1,12 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'core/constants/app_colors.dart';
-import 'screens/auth/welcome/welcome_screen.dart';
-import 'screens/home/home_screen.dart';
-import 'services/auth_service.dart';
-import 'services/music_player_service.dart';
-import 'services/storage_service.dart';
-import 'widgets/intro_dialog_page.dart';
+import 'package:lttbdd_nhom8/core/constants/app_colors.dart';
+import 'package:lttbdd_nhom8/core/app_theme.dart';
+import 'package:lttbdd_nhom8/auth/welcome_screen.dart';
+import 'package:lttbdd_nhom8/user/home_screen.dart';
+import 'package:lttbdd_nhom8/auth/auth_service.dart';
+import 'package:lttbdd_nhom8/music/music_player_service.dart';
+import 'package:lttbdd_nhom8/services/storage_service.dart';
+import 'package:lttbdd_nhom8/widgets/intro_dialog_page.dart';
+import 'package:lttbdd_nhom8/widgets/intro_dialog_observer.dart';
+
+final _introDialogObserver = IntroDialogObserver();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +34,7 @@ Future<void> main() async {
 class MelodyApp extends StatelessWidget {
   final Future<bool> Function(String email, String password)? onLogin;
   final Future<bool> Function(String name, String email, String password)?
-      onRegister;
+  onRegister;
   final Future<void> Function()? onLogout;
   final AuthUser? initialUser;
 
@@ -47,38 +51,8 @@ class MelodyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Melody',
-      theme: ThemeData.dark().copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-          onPrimary: AppColors.white,
-          onSurface: AppColors.white,
-        ),
-        scaffoldBackgroundColor: AppColors.background,
-        dividerColor: AppColors.border,
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: AppColors.surface,
-          contentTextStyle: TextStyle(color: AppColors.white),
-        ),
-        dialogTheme: const DialogThemeData(
-          backgroundColor: AppColors.surface,
-          titleTextStyle: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-          contentTextStyle: TextStyle(color: AppColors.secondaryText),
-        ),
-        bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: AppColors.surface,
-          modalBackgroundColor: AppColors.surface,
-        ),
-        inputDecorationTheme: const InputDecorationThemeData(
-          filled: true,
-          fillColor: AppColors.surface,
-          hintStyle: TextStyle(color: AppColors.secondaryText),
-        ),
-      ),
+      theme: AppTheme.melody,
+      navigatorObservers: [_introDialogObserver],
       builder: (context, child) => ColoredBox(
         color: AppColors.outerBackground,
         child: Center(
@@ -109,7 +83,7 @@ class MelodyApp extends StatelessWidget {
 class _AuthenticatedHome extends StatelessWidget {
   final Future<bool> Function(String email, String password)? onLogin;
   final Future<bool> Function(String name, String email, String password)?
-      onRegister;
+  onRegister;
   final Future<void> Function()? onLogout;
 
   const _AuthenticatedHome({

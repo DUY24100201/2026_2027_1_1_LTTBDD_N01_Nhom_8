@@ -19,12 +19,14 @@ Future<List<int>> derivePasswordHash(
         <JSString>['deriveBits'.toJS].toJS,
       )
       .toDart;
-  final algorithm = {
-    'name': 'PBKDF2',
-    'salt': Uint8List.fromList(salt).toJS,
-    'iterations': iterations,
-    'hash': 'SHA-256',
-  }.jsify()! as JSAny;
+  final algorithm =
+      {
+            'name': 'PBKDF2',
+            'salt': Uint8List.fromList(salt).toJS,
+            'iterations': iterations,
+            'hash': 'SHA-256',
+          }.jsify()!
+          as JSAny;
   final derivedBits = await subtle.deriveBits(algorithm, key, 256).toDart;
 
   return List<int>.from(derivedBits.toDart.asUint8List());

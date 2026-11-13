@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lttbdd_nhom8/models/local_user_profile.dart';
-import 'package:lttbdd_nhom8/models/song.dart';
-import 'package:lttbdd_nhom8/services/auth_service.dart';
+import 'package:lttbdd_nhom8/user/models/local_user_profile.dart';
+import 'package:lttbdd_nhom8/music/models/song.dart';
+import 'package:lttbdd_nhom8/auth/auth_service.dart';
 import 'package:lttbdd_nhom8/services/local_profile_service.dart';
 import 'package:lttbdd_nhom8/services/storage_service.dart';
 
@@ -90,9 +90,10 @@ void main() {
       expect(profileService.profile.displayName, 'Account Two');
       expect(profileService.profile.avatarBase64, 'two-avatar');
 
-      final accounts = await authService.getAllUsers();
-      expect(accounts.map((user) => user.name), ['Updated One', 'Account Two']);
-      expect(accounts.last.email, 'two@example.test');
+      await expectLater(
+        authService.getAllUsers(),
+        throwsA(isA<AuthorizationException>()),
+      );
     },
   );
 }

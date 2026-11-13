@@ -2,16 +2,25 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lttbdd_nhom8/main.dart';
-import 'package:lttbdd_nhom8/screens/auth/login/login_screen.dart';
-import 'package:lttbdd_nhom8/screens/auth/register/register_screen.dart';
-import 'package:lttbdd_nhom8/screens/home/home_screen.dart';
-import 'package:lttbdd_nhom8/screens/menu/menu_screen.dart';
-import 'package:lttbdd_nhom8/screens/playlist/playlist_screen.dart';
-import 'package:lttbdd_nhom8/screens/profile/profile_screen.dart';
-import 'package:lttbdd_nhom8/screens/auth/welcome/welcome_screen.dart';
-import 'package:lttbdd_nhom8/services/music_player_service.dart';
+import 'package:lttbdd_nhom8/auth/login_screen.dart';
+import 'package:lttbdd_nhom8/auth/register_screen.dart';
+import 'package:lttbdd_nhom8/user/home_screen.dart';
+import 'package:lttbdd_nhom8/widgets/menu_screen.dart';
+import 'package:lttbdd_nhom8/music/playlist_screen.dart';
+import 'package:lttbdd_nhom8/user/profile_screen.dart';
+import 'package:lttbdd_nhom8/auth/welcome_screen.dart';
+import 'package:lttbdd_nhom8/music/music_player_service.dart';
 import 'package:lttbdd_nhom8/services/storage_service.dart';
 import 'package:material_ui/material_ui.dart';
+
+Future<void> _dismissIntroIfShown(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  final continueButton = find.text('TIẾP TỤC');
+  if (continueButton.evaluate().isNotEmpty) {
+    await tester.tap(continueButton.first);
+    await tester.pumpAndSettle();
+  }
+}
 
 void main() {
   testWidgets('Melody starts at auth and navigates home after login', (
@@ -25,9 +34,14 @@ void main() {
     expect(find.byType(WelcomeScreen), findsOneWidget);
     expect(find.byType(HomeScreen), findsNothing);
 
-    await tester.tap(find.text('Đăng nhập'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('TIẾP TỤC').first);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Đăng nhập').first);
+    await tester.tap(find.text('Đăng nhập').first);
     await tester.pumpAndSettle();
     expect(find.byType(LoginScreen), findsOneWidget);
+    await _dismissIntroIfShown(tester);
 
     await tester.enterText(
       find.byType(TextField).first,
@@ -47,13 +61,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Playlist').last);
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
 
     expect(find.byType(PlaylistScreen), findsOneWidget);
     expect(find.text('TIẾP TỤC'), findsNothing);
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
     await tester.tap(find.text('Cá nhân'));
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
 
     expect(find.byType(ProfileScreen), findsOneWidget);
     expect(find.text('Hồ sơ cá nhân'), findsOneWidget);
@@ -75,8 +92,10 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
 
     expect(find.byType(MenuScreen), findsOneWidget);
     expect(find.text('TIẾP TỤC'), findsNothing);
@@ -139,8 +158,11 @@ void main() {
     await tester.pumpWidget(
       MelodyApp(onLogin: (email, password) async => false),
     );
-    await tester.tap(find.text('Đăng nhập'));
+    await _dismissIntroIfShown(tester);
+    await tester.ensureVisible(find.text('Đăng nhập').first);
+    await tester.tap(find.text('Đăng nhập').first);
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
     await tester.enterText(
       find.byType(TextField).first,
       'listener@example.test',
@@ -169,7 +191,9 @@ void main() {
       await tester.enterText(find.byType(TextField).at(index), value);
     }
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng kí'));
+    final registerButton = find.widgetWithText(ElevatedButton, 'Đăng ký');
+    await tester.ensureVisible(registerButton);
+    await tester.tap(registerButton);
     await tester.pumpAndSettle();
 
     expect(
@@ -185,8 +209,11 @@ void main() {
     await tester.pumpWidget(
       MelodyApp(onRegister: (name, email, password) async => true),
     );
-    await tester.tap(find.text('Đăng ký'));
+    await _dismissIntroIfShown(tester);
+    await tester.ensureVisible(find.text('Đăng ký').first);
+    await tester.tap(find.text('Đăng ký').first);
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
 
     for (final (index, value) in [
       (0, 'Listener'),
@@ -197,7 +224,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(index), value);
     }
 
-    final registerButton = find.widgetWithText(ElevatedButton, 'Đăng kí');
+    final registerButton = find.widgetWithText(ElevatedButton, 'Đăng ký');
     await tester.ensureVisible(registerButton);
     await tester.tap(registerButton);
     await tester.pumpAndSettle();
@@ -216,7 +243,9 @@ void main() {
     await tester.pumpWidget(
       MelodyApp(onLogin: (email, password) async => true),
     );
-    await tester.tap(find.text('Đăng nhập'));
+    await _dismissIntroIfShown(tester);
+    await tester.ensureVisible(find.text('Đăng nhập').first);
+    await tester.tap(find.text('Đăng nhập').first);
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byType(TextField).first,
@@ -234,6 +263,7 @@ void main() {
     }
     await tester.tap(find.text('Cá nhân'));
     await tester.pumpAndSettle();
+    await _dismissIntroIfShown(tester);
 
     await tester.drag(find.byType(ListView).last, const Offset(0, -1000));
     await tester.pumpAndSettle();

@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import '../models/local_user_profile.dart';
-import '../models/song.dart';
-import 'auth_service.dart';
-import 'storage_service.dart';
+import 'package:lttbdd_nhom8/user/models/local_user_profile.dart';
+import 'package:lttbdd_nhom8/music/models/song.dart';
+import 'package:lttbdd_nhom8/auth/auth_service.dart';
+import 'package:lttbdd_nhom8/services/storage_service.dart';
 
 class LocalProfileService {
   LocalProfileService._();
@@ -141,10 +141,7 @@ class LocalProfileService {
         _profileMigrationOwnerKey,
       );
       if (migrationOwner == null) {
-        await storage.writeString(
-          _profileMigrationOwnerKey,
-          _activeAccountId!,
-        );
+        await storage.writeString(_profileMigrationOwnerKey, _activeAccountId!);
       }
     }
     if (migrateProfile ||
